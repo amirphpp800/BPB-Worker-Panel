@@ -35,6 +35,18 @@ fetch('/panel/settings')
             ['refresh-geo-location', fetchIPInfo]
         ];
 
+        // Add event listeners for DNS configuration
+        const dnsProvider = document.getElementById('dnsProvider');
+        const dnsProtocol = document.getElementById('dnsProtocol');
+        const languageSelect = document.getElementById('languageSelect');
+        
+        if (dnsProvider) dnsProvider.addEventListener('change', updateDNSConfig);
+        if (dnsProtocol) dnsProtocol.addEventListener('change', updateDNSConfig);
+        if (languageSelect) languageSelect.addEventListener('change', changeLanguage);
+        
+        // Initialize DNS configuration
+        initializeDNSConfig();
+
         clickEvents.forEach(([id, handler]) => {
             const element = document.getElementById(id);
             if (element) element.addEventListener('click', handler);
@@ -809,3 +821,74 @@ function renderUdpNoiseBlock(xrayUdpNoises) {
         addUdpNoise(false, index, noise);
     });
 }
+
+function initializeDNSConfig() {
+    const dnsProviders = {
+        adguard: {
+            https: 'https://dns.adguard-dns.com/dns-query',
+            tls: 'tls://dns.adguard-dns.com'
+        },
+        google: {
+            https: 'https://dns.google/dns-query',
+            tls: 'tls://dns.google'
+        },
+        cloudflare: {
+            https: 'https://cloudflare-dns.com/dns-query',
+            tls: 'tls://cloudflare-dns.com'
+        },
+        quad9: {
+            https: 'https://dns.quad9.net/dns-query',
+            tls: 'tls://dns.quad9.net'
+        }
+    };
+    
+    globalThis.dnsProviders = dnsProviders;
+    
+    // Set AdGuard as default
+    const remoteDNSInput = document.getElementById('remoteDNS');
+    if (remoteDNSInput && !remoteDNSInput.value) {
+        remoteDNSInput.value = dnsProviders.adguard.https;
+    }
+}
+
+function updateDNSConfig() {
+    const provider = document.getElementById('dnsProvider').value;
+    const protocol = document.getElementById('dnsProtocol').value;
+    const remoteDNSInput = document.getElementById('remoteDNS');
+    
+    if (provider !== 'custom' && globalThis.dnsProviders[provider]) {
+        remoteDNSInput.value = globalThis.dnsProviders[provider][protocol];
+        remoteDNSInput.disabled = true;
+    } else {
+        remoteDNSInput.disabled = false;
+    }
+    
+    enableApplyButton();
+}
+
+function changeLanguage() {
+    const lang = document.getElementById('languageSelect').value;
+    localStorage.setItem('selectedLanguage', lang);
+    
+    document.querySelectorAll('[data-en][data-fa]').forEach(element => {
+        if (element.tagName === 'OPTION') {
+            element.textContent = element.getAttribute(`data-${lang}`);
+        } else {
+            element.textContent = element.getAttribute(`data-${lang}`);
+        }
+    });
+    
+    // Update document direction for Persian
+    document.dir = lang === 'fa' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+}
+
+// Initialize language on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.value = savedLang;
+        changeLanguage();
+    }
+});

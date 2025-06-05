@@ -63,7 +63,8 @@ export function generateRemark(index, port, address, cleanIPs, protocol, configT
         ? addressType = 'Clean IP'
         : addressType = isDomain(address) ? 'Domain': isIPv4(address) ? 'IPv4' : isIPv6(address) ? 'IPv6' : '';
 
-    return `💦 ${index} - ${protocol}${type} - ${addressType} : ${port}`;
+    const customName = globalThis.configName || 'Empress-Team 🇨🇳';
+    return `${customName} ${index} - ${protocol}${type} - ${addressType} : ${port}`;
 }
 
 export function randomUpperCase (str) {
